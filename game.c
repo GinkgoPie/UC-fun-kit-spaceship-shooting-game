@@ -3,7 +3,7 @@
     @date   01 october 2022
     @brief  A shooting game to be played by two players with two different attacks.
 
-    @defgroup 
+    @defgroup
 */
 
 
@@ -26,12 +26,12 @@
 #define START_MESSAGE_RATE 10
 #define SHIP_INIT_RATE 500
 
-static uint8_t bitmap_led[] =
+static uint8_t display[DISPLAY_WIDTH] =
 {
     0x00, 0x00, 0x70, 0x00, 0x00
 };
 
-//static uint8_t bitmap_ship_init = 0x70;
+
 
 static void game_start (void) {
 
@@ -57,87 +57,120 @@ static void game_start (void) {
 
     }
 
-
+    navswitch_update();
 }
 
 static void column_shift_right(void) {
     uint8_t *copy = NULL;
-    *copy = bitmap_led[LEDMAT_COLS_NUM-1];
-    bitmap_led[4] = bitmap_led[3];
-    bitmap_led[3] = bitmap_led[2];
-    bitmap_led[2] = bitmap_led[1];
-    bitmap_led[1] = bitmap_led[0];
-    bitmap_led[0] = *copy;
+    *copy = display[LEDMAT_COLS_NUM-1];
+    display[4] = display[3];
+    display[3] = display[2];
+    display[2] = display[1];
+    display[1] = display[0];
+    display[0] = *copy;
 
 }
 
 static void column_shift_left(void) {
     uint8_t *copy = NULL;
-    *copy = bitmap_led[0];
-    bitmap_led[0] = bitmap_led[1];
-    bitmap_led[1] = bitmap_led[2];
-    bitmap_led[2] = bitmap_led[3];
-    bitmap_led[3] = bitmap_led[4];
-    bitmap_led[4] = *copy;
+    *copy = display[0];
+    display[0] = display[1];
+    display[1] = display[2];
+    display[2] = display[3];
+    display[3] = display[4];
+    display[4] = *copy;
 }
 
 
-static void display_task (__unused__ void *data)
+static void update_ledmat (void)
 {
 
-    static uint8_t current_column = 0;
-    game_start();
-    while (1)
-    {
+    static uint8_t col = 0;
 
-        pacer_wait ();
+    ledmat_display_column (display[col], col);
 
-        ledmat_display_column (bitmap_led[current_column], current_column);
+    col++;
+    if (col >= DISPLAY_WIDTH)
+        col = 0;
 
-        current_column++;
+}
 
-        if (current_column > (LEDMAT_COLS_NUM - 1))
-        {
-            current_column = 0;
-        }
-
-        navswitch_update();
-        if (navswitch_push_event_p(1)) {
-            column_shift_right();
-            ledmat_display_column (bitmap_led[current_column], current_column);
-            current_column++;
-        }
-
-        if (navswitch_push_event_p(3)) {
-            column_shift_left();
-            ledmat_display_column (bitmap_led[current_column], current_column);
-            current_column++;
-        }
-
+static void switch_status_check (void)
+{
+    navswitch_update();
+    if (navswitch_push_event_p(NAVSWITCH_EAST)) {
+        column_shift_right();
+    } else if (navswitch_push_event_p(NAVSWITCH_WEST)) {
+        column_shift_left();
+    } else if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
+        uint8_t current_row = ;
+        uint8_t current_col = ;
+        ship_shoot(current_row,current_col);
+        IO_send(current_row);
     }
+
+
+}
+
+
+static void ship_shoot(uint8_t row , uint8_t col)
+{
+
+}
+
+static void IO_update()
+{
+    
+}
+
+uint8_t inversed_col void IO_receive(void)
+{
+
+
+}
+
+
+static void IO_send(uint8_t inversed_col)
+{
+
 
 }
 
 int main (void)
 {
 
-
-
-
-
-    task_t tasks[] =
-    {
-        {.func = display_task, .period = TASK_RATE / SHIP_INIT_RATE,
-         .data = 0}
-
-    };
-
-
     system_init ();
+    display_init();
+    pacer_init(1000);
+
     game_start();
-    ledmat_init();
 
-    task_schedule (tasks, ARRAY_SIZE (tasks));
+    uint8_t update_ledmat_tick = 0;
+    uint8_t switch_status_check_tick = 0;
+    uint8_t IO_check_tick = 0;
+    while(1)
+    {
+        pacer_wait();
+
+        update_ledmat_tick++;
+        switch_status_check_tick++;
+        IO_check_tick++;
+
+        if (update_ledmat_tick >=2) {
+            update_ledmat_tick = 0;
+            update_ledmat();
+
+        if (switch_status_check_tick>=5) {
+            switch_status_check_tick = 0;
+            switch_status_check();
+        }
+
+        if (IO_check_tick>=5) {
+            IO_check_tick = 0;
+            IO_update();
+        }
+
+        }
+    }
     return 0;
-
 }
