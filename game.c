@@ -31,6 +31,8 @@ static uint8_t display[DISPLAY_WIDTH] =
     0x00, 0x00, 0x70, 0x00, 0x00
 };
 
+static uint8_t cockpit[2] = {4,2}; // Initially, The head location of our ship is at row 5 column 3;
+static bool shooting_status = false;
 
 
 static void game_start (void) {
@@ -68,7 +70,11 @@ static void column_shift_right(void) {
     display[2] = display[1];
     display[1] = display[0];
     display[0] = *copy;
-
+    if (cockpit[1] == 4) {
+        cockpit[1] = 0;
+    } else {
+        cockpit[1] = (cockpit[1] + 1)   ;
+    }
 }
 
 static void column_shift_left(void) {
@@ -79,6 +85,12 @@ static void column_shift_left(void) {
     display[2] = display[3];
     display[3] = display[4];
     display[4] = *copy;
+    if (cockpit[1] == 0) {
+        cockpit[1] = 4;
+    } else {
+        cockpit[1] = (cockpit[1] - 1)   ;
+    }
+
 }
 
 
@@ -95,6 +107,25 @@ static void update_ledmat (void)
 
 }
 
+static void IO_update(void)
+{
+
+}
+
+uint8_t IO_receive(void)
+{
+    return 0;
+
+}
+
+
+static void IO_send(uint8_t col)
+{
+
+    //uint8_t inversed_col = 5-col;
+    col = 5-col;
+}
+
 static void switch_status_check (void)
 {
     navswitch_update();
@@ -103,36 +134,29 @@ static void switch_status_check (void)
     } else if (navswitch_push_event_p(NAVSWITCH_WEST)) {
         column_shift_left();
     } else if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
-        uint8_t current_row = ;
-        uint8_t current_col = ;
-        ship_shoot(current_row,current_col);
-        IO_send(current_row);
+
+        uint8_t current_col = cockpit[1];
+        shooting_status = true;
+        IO_send(current_col);
+    } if (navswitch_up_p(NAVSWITCH_PUSH)) {
+        shooting_status = false;
     }
 
 
 }
 
 
-static void ship_shoot(uint8_t row , uint8_t col)
+
+
+static void ship_shoot(void)
 {
+    uint8_t colunm_to_display = cockpit[1];
+    uint8_t pattern = 0xff;
+    if (shooting_status){
+        ledmat_display_column (pattern, colunm_to_display);
+    } else {
 
-}
-
-static void IO_update()
-{
-    
-}
-
-uint8_t inversed_col void IO_receive(void)
-{
-
-
-}
-
-
-static void IO_send(uint8_t inversed_col)
-{
-
+    }
 
 }
 
@@ -141,36 +165,45 @@ int main (void)
 
     system_init ();
     display_init();
-    pacer_init(1000);
+    pacer_init(200);
 
     game_start();
 
     uint8_t update_ledmat_tick = 0;
     uint8_t switch_status_check_tick = 0;
     uint8_t IO_check_tick = 0;
+    uint8_t shooting_check_tick = 0;
     while(1)
     {
         pacer_wait();
 
+        shooting_check_tick++;
         update_ledmat_tick++;
         switch_status_check_tick++;
         IO_check_tick++;
+        if (shooting_check_tick >=2) {
+            shooting_check_tick = 0;
+            ship_shoot();
+        }
 
-        if (update_ledmat_tick >=2) {
+        if (update_ledmat_tick >=1) {
             update_ledmat_tick = 0;
             update_ledmat();
+        }
 
-        if (switch_status_check_tick>=5) {
+        if (switch_status_check_tick>=2) {
             switch_status_check_tick = 0;
             switch_status_check();
         }
 
-        if (IO_check_tick>=5) {
+        if (IO_check_tick>=2) {
             IO_check_tick = 0;
             IO_update();
         }
 
-        }
+
+
+
     }
     return 0;
 }
