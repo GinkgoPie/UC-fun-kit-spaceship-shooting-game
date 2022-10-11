@@ -19,12 +19,17 @@
 #include "task.h"
 #include "navswitch.h"
 #include "delay.h"
+#include "ir_uart.h"
 #include <stdio.h>
+
 //#include <string.h>
 
 #define GAME_START_PACER_RATE 500
 #define START_MESSAGE_RATE 10
 #define SHIP_INIT_RATE 500
+#define ledmat_rows 7
+#define ledmat_cols 5
+#define END 127
 
 static uint8_t display[DISPLAY_WIDTH] =
 {
@@ -32,7 +37,8 @@ static uint8_t display[DISPLAY_WIDTH] =
 };
 
 static uint8_t cockpit[2] = {4,2}; // Initially, The head location of our ship is at row 5 column 3;
-static bool shooting_status = false;
+static bool SHOOTING_STATUS = false;
+static bool END = false;
 
 
 static void game_start (void) {
@@ -73,7 +79,7 @@ static void column_shift_right(void) {
     if (cockpit[1] == 4) {
         cockpit[1] = 0;
     } else {
-        cockpit[1] = (cockpit[1] + 1)   ;
+        cockpit[1] = (cockpit[1] + 1);
     }
 }
 
@@ -107,24 +113,59 @@ static void update_ledmat (void)
 
 }
 
-static void IO_update(void)
+
+static void game_end(void)
 {
+
+   ir_uart_putc(END);
 
 }
 
-uint8_t IO_receive(void)
+
+static void IO_receive(void)
 {
-    return 0;
+    uint8_t received_num = ir_uart_getc();
+    if (received_num == cockpit[1]) {
+        display_pixel_set(cockpit[1],cockpit[0],0);
+        if (cockpit[0] < 6) {
+            cockpit[0] ++;
+        } else  {
+            game_end(END); //I lose
+        }
+    } else if (received_num == END) {
+        //I won
+
+    }
+
+
 
 }
+
+
+
 
 
 static void IO_send(uint8_t col)
 {
 
-    //uint8_t inversed_col = 5-col;
-    col = 5-col;
+    uint8_t inversed_col = ledmat_cols-col;
+    ir_uart_putc(inversed_col);
+
 }
+
+
+static void IO_update(void)
+{
+   if (ir_uart_read_ready_p()) {
+       IO_receive();
+   }
+
+   if (SEND_READY) {
+      IO_send(cockpit[1]);
+      SEND_READY = false;
+   }
+}
+
 
 static void switch_status_check (void)
 {
@@ -135,11 +176,8 @@ static void switch_status_check (void)
         column_shift_left();
     } else if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
 
-        uint8_t current_col = cockpit[1];
-        shooting_status = true;
-        IO_send(current_col);
-    } if (navswitch_up_p(NAVSWITCH_PUSH)) {
-        shooting_status = false;
+        SHOOTING_STATUS = true;
+        SEND_READY = true;
     }
 
 
@@ -150,22 +188,30 @@ static void switch_status_check (void)
 
 static void ship_shoot(void)
 {
-    uint8_t colunm_to_display = cockpit[1];
-    uint8_t pattern = 0xff;
-    if (shooting_status){
-        ledmat_display_column (pattern, colunm_to_display);
-    } else {
+  uint8_t colunm = cockpit[1];
+  uint8_t pattern1 = display[colunm]|(1<<(7-cockpit[0]-1));
+  uint8_t pattern2 = display[colunm]|(1);
+  if (SHOOTING_STATUS){
+      for (uint8_t i =cockpit[0]; i>0; i--) {
+          ledmat_display_column (pattern1, colunm);
+          pattern1 = pattern1 | (1<<i);
+      }
+      ledmat_display_column (pattern2, colunm);
+      SHOOTING_STATUS = false;
+  } else {
 
-    }
-
+  }
 }
+
+
 
 int main (void)
 {
 
     system_init ();
     display_init();
-    pacer_init(200);
+    ir_uart_init ();
+    pacer_init(800);
 
     game_start();
 
@@ -181,12 +227,12 @@ int main (void)
         update_ledmat_tick++;
         switch_status_check_tick++;
         IO_check_tick++;
-        if (shooting_check_tick >=2) {
+        if (shooting_check_tick >=10) {
             shooting_check_tick = 0;
             ship_shoot();
         }
 
-        if (update_ledmat_tick >=1) {
+        if (update_ledmat_tick >=3) {
             update_ledmat_tick = 0;
             update_ledmat();
         }
@@ -196,7 +242,7 @@ int main (void)
             switch_status_check();
         }
 
-        if (IO_check_tick>=2) {
+        if (IO_check_tick>=20) {
             IO_check_tick = 0;
             IO_update();
         }
