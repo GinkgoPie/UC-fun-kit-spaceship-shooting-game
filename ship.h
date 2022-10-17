@@ -24,7 +24,6 @@ void ship_to_right(ship_t* aShip);
 
 void ship_to_left(ship_t* aShip);
 
-void ship_shoot(ship_t* aShip);
 
 
 #endif
