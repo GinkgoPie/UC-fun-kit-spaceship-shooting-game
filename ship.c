@@ -10,6 +10,7 @@
 
 
 
+
 ship_t ship_init(void)
 {
     ship_t myShip = {HEAD_ROW_INIT, HEAD_COLUMN_INIT, HEAD_SHOT_DOWN_INIT};
