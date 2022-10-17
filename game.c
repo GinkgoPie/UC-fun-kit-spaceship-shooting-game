@@ -28,6 +28,7 @@
 #define LEDMAT_ROWS 6
 #define LEDMAT_COLS 4
 #define END_MAGIC 127
+#define GAME_OVER_CHECK 6
 
 uint8_t display[] =
 {
@@ -94,7 +95,10 @@ static void IO_receive(void)
             myShipPtr->head_row ++;
         } else{
             LOSE = true;
-            ir_uart_putc(END_MAGIC); //I lose
+            for (uint8_t i =0; i<GAME_OVER_CHECK;i++) {
+                ir_uart_putc(END_MAGIC); //I lose. We send it 5 times to counter IR problems
+            }
+
         }
     } else if (received_num == END_MAGIC) {
         WON = true;
@@ -212,10 +216,16 @@ static void end_display(void)
     tinygl_text_speed_set (START_MESSAGE_RATE);
     tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
 
-    char display[] = "END\0";
-    char *ptr1 =display ;
+    char displayWon[] = "Winner\0";
+    char displayLose[] = "Loser\0";
+    char *ptrWon =displayWon ;
+    char *ptrLost =displayLose ;
+    if (WON) {
+        tinygl_text(ptrWon);
+    } else if (LOSE) {
+        tinygl_text(ptrLost);
+    }
 
-    tinygl_text(ptr1);
     pacer_init(500);
     while (1)
     {
@@ -234,12 +244,10 @@ int main (void)
     system_init ();
     display_init();
     ir_uart_init ();
-    pacer_init(200);
+    pacer_init(500);
     myShip = ship_init();
     myShipPtr = &myShip;
     game_start();
-
-
     uint8_t update_ledmat_tick = 0;
     uint8_t switch_status_check_tick = 0;
     uint8_t IO_check_tick = 0;
@@ -253,23 +261,25 @@ int main (void)
         switch_status_check_tick++;
         IO_check_tick++;
 
-        if (bullet_display_tick >=10) {
+        if (update_ledmat_tick >=3) {
+            update_ledmat_tick = 0;
+            update_ledmat(&display);
+        }
+
+
+
+        if (switch_status_check_tick>=3) {
+            switch_status_check_tick = 0;
+            switch_status_check();
+        }
+
+        if (bullet_display_tick >=15) {
             bullet_display_tick = 0;
             bullet_shoot();
             bullet_receive();
 
         }
 
-
-        if (update_ledmat_tick >=3) {
-            update_ledmat_tick = 0;
-            update_ledmat(&display);
-        }
-
-        if (switch_status_check_tick>=2) {
-            switch_status_check_tick = 0;
-            switch_status_check();
-        }
 
         if (IO_check_tick>=20) {
             IO_check_tick = 0;
