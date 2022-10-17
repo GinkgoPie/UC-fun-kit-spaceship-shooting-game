@@ -14,10 +14,10 @@
 
 
 
-void column_shift_right(uint8_t* led_map);
+void column_shift_right(uint8_t* led_map, uint8_t ship_head_col,uint8_t ship_head_row);
 
 
-void column_shift_left(uint8_t* led_map);
+void column_shift_left(uint8_t* led_map, uint8_t ship_head_col,uint8_t ship_head_row);
 
 
 void update_ledmat(uint8_t* led_map);
