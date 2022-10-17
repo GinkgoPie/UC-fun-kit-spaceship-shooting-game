@@ -48,7 +48,7 @@ static bool LOSE = false;
 static uint8_t bullet_col = 0;
 static uint8_t bullet_row = 0;
 static uint8_t damage_col = 0;
-static uint8_t damage_row = 0;
+static uint8_t damage_row = 0x01;
 
 
 static void game_start (void) {
@@ -139,10 +139,10 @@ static void switch_status_check (void)
 {
     navswitch_update();
     if (navswitch_push_event_p(NAVSWITCH_EAST)) {
-        column_shift_right(displayPtr);
+        column_shift_right(displayPtr,myShipPtr->head_column,myShipPtr->head_row);
         ship_to_right(myShipPtr);
     } else if (navswitch_push_event_p(NAVSWITCH_WEST)) {
-        column_shift_left(displayPtr);
+        column_shift_left(displayPtr,myShipPtr->head_column,myShipPtr->head_row);
         ship_to_left(myShipPtr);
     } else if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
         bullet_col = (myShipPtr->head_column);
@@ -185,9 +185,11 @@ static void bullet_receive(void)
 
     if (damage_col == myShipPtr->head_column) {
         bullet_end_row = myShipPtr->head_row;
+
     }
 
     if (RECEIVED && damage_row == 0) {
+        //displayPtr[damage_col] |= (1<<damage_row);
         single_pixel_set(displayPtr,damage_col,0,1);
         damage_row++;
     }
@@ -195,11 +197,14 @@ static void bullet_receive(void)
     else if (RECEIVED && damage_row < bullet_end_row ){
         single_pixel_set(displayPtr,damage_col,damage_row-1,0);
         single_pixel_set(displayPtr,damage_col,damage_row,1);
+        //displayPtr[damage_col] &= ~(1<<(damage_row-1));
+        //displayPtr[damage_col] |= (1<<damage_row);
         damage_row++;
     }
 
     else if (RECEIVED && damage_row == bullet_end_row) {
         single_pixel_set(displayPtr,damage_col,damage_row-1,0);
+        //displayPtr[damage_col] &= ~(1<<(damage_row-1));
         damage_row =0;
         RECEIVED = false;
     }
@@ -244,7 +249,7 @@ int main (void)
     system_init ();
     display_init();
     ir_uart_init ();
-    pacer_init(500);
+    pacer_init(800);
     myShip = ship_init();
     myShipPtr = &myShip;
     game_start();
@@ -273,7 +278,7 @@ int main (void)
             switch_status_check();
         }
 
-        if (bullet_display_tick >=15) {
+        if (bullet_display_tick >=7) {
             bullet_display_tick = 0;
             bullet_shoot();
             bullet_receive();
