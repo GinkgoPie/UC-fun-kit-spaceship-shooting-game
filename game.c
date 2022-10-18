@@ -160,7 +160,7 @@ static void switch_status_check (void)
         column_shift_left(display,myShipPtr->head_column,myShipPtr->head_row);
         ship_to_left(myShipPtr);
     } else if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
-        //if pushed in,
+        //if pushed in, the bullet is 'shot' by setting the bullet column to the column that the ship is in and makes the bullet column available to send 
         bullet_col = (myShipPtr->head_column);
         bullet_row = (myShipPtr->head_row)-2;
         SHOOTING_STATUS = true;
@@ -171,6 +171,7 @@ static void switch_status_check (void)
 
 
 static void bullet_shoot(void)
+/*Function that handles the shooting of the ships bullet*/
 {
     // Turning off the led from previous bullet row, turn on the next intended led;
     if (SHOOTING_STATUS && bullet_row != 0){
@@ -199,11 +200,9 @@ static void bullet_receive(void)
 
     if (damage_col == myShipPtr->head_column) {
         bullet_end_row = myShipPtr->head_row;
-
     }
 
     if (RECEIVED && damage_row == 0) {
-        //display[damage_col] |= (1<<damage_row);
         single_pixel_set(display,damage_col,0,1);
         damage_row++;
     }
@@ -282,12 +281,11 @@ int main (void)
         switch_status_check_tick++;
         IO_check_tick++;
 
+        //Updates the LED matrix to when its ticks are 
         if (update_ledmat_tick >=3) {
             update_ledmat_tick = 0;
             update_ledmat(&display);
         }
-
-
 
         if (switch_status_check_tick>=3) {
             switch_status_check_tick = 0;
@@ -300,7 +298,6 @@ int main (void)
             bullet_receive();
 
         }
-
 
         if (IO_check_tick>=20) {
             IO_check_tick = 0;
