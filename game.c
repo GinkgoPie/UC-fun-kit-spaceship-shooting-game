@@ -296,7 +296,7 @@ int main (void)
         //Updates the LED matrix to when its ticks 
         if (update_ledmat_tick >=3) {
             update_ledmat_tick = 0;
-            update_ledmat(&display);
+            update_ledmat(display);
         }
 
         //Checks switch status
