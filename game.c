@@ -2,12 +2,19 @@
     @author Jiahe Bao, Callum Whitehead
     @date   01 October 2022
     @brief  A ship game to be played by two players with the objective 
-            being to be the first to shoot the opponents ship 3 times.
+            being to be the first to shoot the opponents ship 3 times. A ship has 3 pieces and a
+            piece is lost if the opposing player shoots a bullet from the same
+            column that the player is in. A player can avoid being shot by
+            moving their ship left to right. The game starts with a splash screen displaying
+            a message and waits for the players to press the navswitch down. Once pressed,
+            the user can move their ship and shoot. The game is over when a player has 0 pieces
+            of their ship left. The game ends with different splash screens depending on if the
+            player wins or loses 
 
     @defgroup
 */
 
-//Header functions used by this 'game.c' program
+//Header files used by this 'game.c' program
 #include "system.h"
 #include "pacer.h"
 #include "pio.h"
@@ -132,13 +139,13 @@ static void IO_update(void)
 /*Function checks to see if the player has shot a bullet that needs to be sent to the opponent
 or if there is a bullet from the opponent thats ready to be received*/
 {
-
+    //if something has been received from the opposing player, the IO_receive funtion is called
    if (ir_uart_read_ready_p()) {
        RECEIVED = true;
        IO_receive();
 
    }
-
+    //if something has been received, the IO_send funtion is called
    if (SEND) {
       IO_send(myShipPtr->head_column);
       SEND = false;
@@ -199,25 +206,25 @@ static void bullet_receive(void)
     uint8_t bullet_end_row = LEDMAT_ROWS;
 
 
-    //Make sure bullet won't pass through our ship if they're in the same collum.
+    //Make sure bullet won't pass through our ship if they're in the same column.
     if (damage_col == myShipPtr->head_column) {
         bullet_end_row = myShipPtr->head_row;
     }
 
-    //Display bullet on the first row of led matrix if we received some bullet columb number.
+    //Display bullet on the first row of led matrix if we received some bullet column number.
     if (RECEIVED && damage_row == 0) {
         single_pixel_set(display,damage_col,0,1);
         damage_row++;
     }
 
-    //Turn off bullet led from previous, and turn on bullet image on the next row
+    //Turns off bullet led from previous, and turn on bullet image on the next row
     else if (RECEIVED && damage_row < bullet_end_row ){
         single_pixel_set(display,damage_col,damage_row-1,0);
         single_pixel_set(display,damage_col,damage_row,1);
         damage_row++;
     }
 
-    //Turn off the last bullet led. Bullet display ends.
+    //Turns off the last bullet led. Bullet display ends.
     else if (RECEIVED && damage_row == bullet_end_row) {
         single_pixel_set(display,damage_col,damage_row-1,0);
         damage_row =0;
@@ -286,17 +293,19 @@ int main (void)
         switch_status_check_tick++;
         IO_check_tick++;
 
-        //Updates the LED matrix to when its ticks are 
+        //Updates the LED matrix to when its ticks 
         if (update_ledmat_tick >=3) {
             update_ledmat_tick = 0;
             update_ledmat(&display);
         }
 
+        //Checks switch status
         if (switch_status_check_tick>=3) {
             switch_status_check_tick = 0;
             switch_status_check();
         }
 
+        //How fast the bullet is displayed/updated on the LED matix
         if (bullet_display_tick >=7) {
             bullet_display_tick = 0;
             bullet_shoot();
@@ -304,11 +313,13 @@ int main (void)
 
         }
 
+        //Speed at which the IR IO is checked
         if (IO_check_tick>=20) {
             IO_check_tick = 0;
             IO_update();
         }
 
+        //When players' 'WON'/'LOST' status is true, the loop is broken and the end game screen is shown on players displays
         if (WON||LOST) {
             break;
         }
