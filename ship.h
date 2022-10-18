@@ -16,7 +16,7 @@ typedef struct
 {
     uint8_t head_row;
     uint8_t head_column;
-    bool head_shot_down;
+
 } ship_t;
 
 ship_t ship_init(void);
