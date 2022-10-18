@@ -1,7 +1,7 @@
 # File:   Makefile
-# Author: M. P. Hayes, UCECE
-# Date:   12 Sep 2010
-# Descr:  Makefile for game
+# Author: Jiahe Bao, Callum Whitehead
+# Date:   18 October 2022
+# Descr:  Makefile for our game 'Ship Game'
 
 # Definitions.
 CC = avr-gcc
