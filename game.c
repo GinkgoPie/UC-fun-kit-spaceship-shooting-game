@@ -198,21 +198,26 @@ static void bullet_receive(void)
 {
     uint8_t bullet_end_row = LEDMAT_ROWS;
 
+
+    //Make sure bullet won't pass through our ship if they're in the same collum.
     if (damage_col == myShipPtr->head_column) {
         bullet_end_row = myShipPtr->head_row;
     }
 
+    //Display bullet on the first row of led matrix if we received some bullet columb number.
     if (RECEIVED && damage_row == 0) {
         single_pixel_set(display,damage_col,0,1);
         damage_row++;
     }
 
+    //Turn off bullet led from previous, and turn on bullet image on the next row
     else if (RECEIVED && damage_row < bullet_end_row ){
         single_pixel_set(display,damage_col,damage_row-1,0);
         single_pixel_set(display,damage_col,damage_row,1);
         damage_row++;
     }
 
+    //Turn off the last bullet led. Bullet display ends.
     else if (RECEIVED && damage_row == bullet_end_row) {
         single_pixel_set(display,damage_col,damage_row-1,0);
         damage_row =0;
