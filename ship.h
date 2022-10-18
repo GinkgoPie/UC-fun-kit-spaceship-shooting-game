@@ -1,7 +1,7 @@
 /** @file   ship.h
-    @author Jiahe Bao
-    @date  15 october 2022
-    @brief  Ship header file
+    @author Jiahe Bao, Callum Whitehead
+    @date  15 October 2022
+    @brief  Header file for ship.c
 
     @defgroup
 */
@@ -11,6 +11,7 @@
 
 #include "system.h"
 
+// Creates the ship, a struct called ship_t.
 typedef struct
 {
     uint8_t head_row;
