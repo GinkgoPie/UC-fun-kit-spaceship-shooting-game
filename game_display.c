@@ -41,7 +41,7 @@ void column_shift_right(uint8_t* led_map, uint8_t ship_head_col,uint8_t ship_hea
 
 
 void column_shift_left(uint8_t* led_map, uint8_t ship_head_col,uint8_t ship_head_row) {
-//Function the same as the column_shift_right function but shifts left by decreasing the value of the ships column
+//Works the same as the column_shift_right function but shifts left by decreasing the value of the ships column
     for (uint8_t i = ship_head_row; i<LEDMAT_ROWS+1;i++) {
         single_pixel_set(led_map,ship_head_col,i,0);
     }
