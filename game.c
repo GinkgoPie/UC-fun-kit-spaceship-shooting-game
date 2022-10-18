@@ -37,7 +37,7 @@ uint8_t display[] =
     0x00, 0x00, 0x70, 0x00, 0x00
 };
 
-uint8_t *displayPtr = &display;
+
 
 //Ships initialisation variables
 static ship_t myShip;
@@ -97,16 +97,17 @@ If the player receives the special value, then the players 'WON' status is set t
     damage_col = received_num;
     if (received_num == myShipPtr->head_column) {
 
-        single_pixel_set(displayPtr,myShipPtr->head_column,myShipPtr->head_row,0);
+        single_pixel_set(display,myShipPtr->head_column,myShipPtr->head_row,0);
 
         if (myShipPtr->head_row < LEDMAT_ROWS) {
             myShipPtr->head_row ++; //The ships head row is increased which decreases the height of the ship
-        } else{
+        } else {
             LOST = true;
             for (uint8_t i =0; i<GAME_OVER_CHECK;i++) {
                 ir_uart_putc(WINNER_CHECK); //The player loses. The special integer is sent 5 times to counter IR problems
             }
         }
+
     } else if (received_num == WINNER_CHECK) {
         WON = true; /*'WINNER_CHECK' is sent from the oppositions board if they have lost. When received, the players' 'WON' status is set to true signifying that they have won the game*/
     }
@@ -142,6 +143,7 @@ or if there is a bullet from the opponent thats ready to be received*/
       IO_send(myShipPtr->head_column);
       SEND = false;
    }
+   
 }
 
 
@@ -151,11 +153,11 @@ static void switch_status_check (void)
     navswitch_update();
     if (navswitch_push_event_p(NAVSWITCH_EAST)) {
         //if pushed right, the functions to move the ship to the right are called.
-        column_shift_right(displayPtr,myShipPtr->head_column,myShipPtr->head_row);
+        column_shift_right(display,myShipPtr->head_column,myShipPtr->head_row);
         ship_to_right(myShipPtr);
     } else if (navswitch_push_event_p(NAVSWITCH_WEST)) {
         //if pushed left, the functions to move the ship to the left are called.
-        column_shift_left(displayPtr,myShipPtr->head_column,myShipPtr->head_row);
+        column_shift_left(display,myShipPtr->head_column,myShipPtr->head_row);
         ship_to_left(myShipPtr);
     } else if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
         //if pushed in,
@@ -172,21 +174,21 @@ static void bullet_shoot(void)
 {
     // Turning off the led from previous bullet row, turn on the next intended led;
     if (SHOOTING_STATUS && bullet_row != 0){
-        single_pixel_set(displayPtr,bullet_col,bullet_row+1 ,0);
-        single_pixel_set(displayPtr,bullet_col,bullet_row ,1);
+        single_pixel_set(display,bullet_col,bullet_row+1 ,0);
+        single_pixel_set(display,bullet_col,bullet_row ,1);
         bullet_row--;
     }
 
     //Change the status back to not shooting when bullet reaches to row 0;
     else if (SHOOTING_STATUS && bullet_row == 0) {
-        single_pixel_set(displayPtr,bullet_col,1,0);
-        single_pixel_set(displayPtr,bullet_col,0,1);
+        single_pixel_set(display,bullet_col,1,0);
+        single_pixel_set(display,bullet_col,0,1);
         SHOOTING_STATUS = false;
     }
 
     // while not shooting, turn off row 0 led;
     else if (!SHOOTING_STATUS) {
-        single_pixel_set(displayPtr,bullet_col,0,0);
+        single_pixel_set(display,bullet_col,0,0);
     }
 
 }
@@ -201,22 +203,19 @@ static void bullet_receive(void)
     }
 
     if (RECEIVED && damage_row == 0) {
-        //displayPtr[damage_col] |= (1<<damage_row);
-        single_pixel_set(displayPtr,damage_col,0,1);
+        //display[damage_col] |= (1<<damage_row);
+        single_pixel_set(display,damage_col,0,1);
         damage_row++;
     }
 
     else if (RECEIVED && damage_row < bullet_end_row ){
-        single_pixel_set(displayPtr,damage_col,damage_row-1,0);
-        single_pixel_set(displayPtr,damage_col,damage_row,1);
-        //displayPtr[damage_col] &= ~(1<<(damage_row-1));
-        //displayPtr[damage_col] |= (1<<damage_row);
+        single_pixel_set(display,damage_col,damage_row-1,0);
+        single_pixel_set(display,damage_col,damage_row,1);
         damage_row++;
     }
 
     else if (RECEIVED && damage_row == bullet_end_row) {
-        single_pixel_set(displayPtr,damage_col,damage_row-1,0);
-        //displayPtr[damage_col] &= ~(1<<(damage_row-1));
+        single_pixel_set(display,damage_col,damage_row-1,0);
         damage_row =0;
         RECEIVED = false;
     }
