@@ -20,6 +20,7 @@ Setup:	        - Plug in both Funkits and load the program
 		        - Set orientation of both Funkits so that both boards 'Up's' are
 			    facing each other (USB connection ports facing each other)
 		        - A dimly lit room and clear path free of obstructions for better IR connectivity
+                - To start playing, press the navswitch down
 
 Key Features:   - Players' bullet appears on the opponents board and interacts with it
 		        - Ability to interact with a ship using the Funkits' navswitch
