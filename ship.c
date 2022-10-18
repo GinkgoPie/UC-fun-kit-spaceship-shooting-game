@@ -15,15 +15,13 @@
 
 #define HEAD_COLUMN_INIT 2
 
-#define HEAD_SHOT_DOWN_INIT 0
-
 
 
 
 ship_t ship_init(void)
 //Initialises the values for the players' ships' head row, column
 {
-    ship_t myShip = {HEAD_ROW_INIT, HEAD_COLUMN_INIT, HEAD_SHOT_DOWN_INIT};
+    ship_t myShip = {HEAD_ROW_INIT, HEAD_COLUMN_INIT};
     return myShip;
 }
 
